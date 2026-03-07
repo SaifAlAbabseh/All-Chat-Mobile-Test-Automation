@@ -20,7 +20,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                        url: 'https://github.com/SaifAlAbabseh/All-Chat-UI-Test-Automation.git'
+                        url: 'https://github.com/SaifAlAbabseh/All-Chat-Mobile-Test-Automation'
             }
         }
 
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 script {
                     // Read the .env file as UTF-8
-                    def lines = readFile(file: '/var/Env/.env', encoding: 'UTF-8').readLines()
+                    def lines = readFile(file: '/var/Env/Mobile/.env', encoding: 'UTF-8').readLines()
                     lines.each { line ->
                         line = line.trim()
                         if (!line || line.startsWith("#")) return  // skip empty lines and comments
@@ -39,41 +39,13 @@ pipeline {
             }
         }
 
-        stage('Start Recording') {
+        stage('Start Maven Tests') {
             steps {
                 sh '''
                 #!/bin/bash
                 set +e
                 
-                Xvfb :1 -screen 0 1920x1080x24 -ac &
-                export DISPLAY=:1
-                
-                mkdir -p $WORKSPACE/recordings
-                chmod 777 $WORKSPACE/recordings
-                
-                ffmpeg -y -probesize 100M -analyzeduration 100M -f x11grab -video_size 1920x1080 -i $DISPLAY \
-                       -r 30 -codec:v libx264 -preset ultrafast \
-                       $WORKSPACE/recordings/test.mp4 &
-                FFMPEG_PID=$!
-                
-                cleanup() {
-                    echo ">>> CLEANUP RUNNING"
-                    if [[ -n "$FFMPEG_PID" ]]; then
-                        kill -2 "$FFMPEG_PID" 2>/dev/null || true
-                        wait "$FFMPEG_PID" 2>/dev/null || true
-                    fi
-                    pkill Xvfb 2>/dev/null || true
-                }
-                
-                trap cleanup EXIT
-                
-                mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml \
-                               -Dbrowser=${browser} -DheadlessMode=${headlessMode} \
-                               -Dmobile=${mobile} -DincludeAudio=${includeAudio}
-                               
-                TEST_EXIT_CODE=$?
-                echo "Maven exited with $TEST_EXIT_CODE"
-                exit $TEST_EXIT_CODE
+                mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform=${platform}
                 '''
             }
         }
@@ -81,7 +53,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'recordings/*.mp4', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'src/main/recordings/*.mp4', allowEmptyArchive: true
 
             junit 'target/surefire-reports/*.xml'
             archiveArtifacts artifacts: 'target/surefire-reports/**, src/main/screenshots/*.png'
@@ -110,7 +82,7 @@ pipeline {
                 def failedScreenshots = isSuccess ? "" : "* 📸 Screenshots: <${env.BUILD_URL}artifact/src/main/screenshots|Click here>\n"
 
                 def jobStatusOverall = isSuccess ? '✅  PASSED JOB ✅' : '❌ FAILED JOB ❌'
-                def platformTestedOn = params.mobile ? '📱 Mobile' : '🖥️ Desktop'
+                def platformTestedOn = params.platform.toUpperCase()
                 def slackMessage = """
 ************************************************************
                         ${jobStatusOverall}
@@ -126,14 +98,14 @@ pipeline {
 * ⏩ SKIPPED: ${SKIPPED_TESTS}
 * ⏩ IGNORED: ${IGNORED_TESTS}
 ************************************************************
-* 🌐 Browser: ${browser}
+* ⚙️ System: 📱 Mobile
 * ⚙️ Platform: ${platformTestedOn}
 ${failedScreenshots}
 * 📋 Test Report: <${env.BUILD_URL}artifact/target/surefire-reports/index.html|Click here>
 * ⬇️⬇️ Test video recording can be found below ⬇️⬇️
 """
 
-                def testVideoRecordingPath = "recordings/test.mp4"
+                def testVideoRecordingPath = "src/main/recordings/test.mp4"
 
                 def resultColor = isSuccess ? "good" : "danger"
 
