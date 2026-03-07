@@ -1,6 +1,8 @@
 package base;
 
 import helpers.MainHelpers;
+import io.appium.java_client.screenrecording.BaseStartScreenRecordingOptions;
+import io.appium.java_client.screenrecording.CanRecordScreen;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -25,7 +27,8 @@ public class TestBase {
         String avd = EnvConfig.get("AC_ANDROID_AVD");
         String appName = EnvConfig.get("AC_ANDROID_APP_NAME");
         new Driver(platform, serverUrl, avd, appName);
-//        ScreenActions.startVideoRecording(this.getClass().getName(), includeAudio);
+        //Start screen recording
+        ScreenActions.startScreenRecording();
     }
 
     @Parameters({"platform"})
@@ -38,7 +41,8 @@ public class TestBase {
 
     @AfterClass(description = "Stop the video record and quit from the web driver")
     public void tearDown() {
-//        ScreenActions.stopVideoRecording();
+        //Stop screen recording
+        ScreenActions.stopScreenRecording();
         Driver.getDriver().quit();
     }
 }

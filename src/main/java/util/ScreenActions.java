@@ -3,11 +3,17 @@ package util;
 
 import atu.testrecorder.ATUTestRecorder;
 import atu.testrecorder.exceptions.ATUTestRecorderException;
+import io.appium.java_client.android.AndroidStartScreenRecordingOptions;
+import io.appium.java_client.screenrecording.BaseStartScreenRecordingOptions;
+import io.appium.java_client.screenrecording.CanRecordScreen;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.surefire.shared.codec.binary.Base64;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.Duration;
 
 public class ScreenActions {
 
@@ -22,21 +28,24 @@ public class ScreenActions {
         }
     }
 
-    public static void startVideoRecording(String fileName, boolean includeAudio) {
-        String videoPath = "src/main/videos";
-        try {
-            recorder = new ATUTestRecorder(videoPath, fileName, includeAudio);
-            recorder.start();
-        } catch (ATUTestRecorderException e) {
-            e.printStackTrace();
-        }
+    public static void startScreenRecording() {
+        ((CanRecordScreen) Driver.getDriver()).startRecordingScreen(
+                new AndroidStartScreenRecordingOptions()
+                        .withTimeLimit(Duration.ofMinutes(10))
+        );
     }
 
-    public static void stopVideoRecording() {
+    public static void stopScreenRecording() {
+        String base64Video = ((CanRecordScreen) Driver.getDriver()).stopRecordingScreen();
+        byte[] videoBytes = Base64.decodeBase64(base64Video);
+        File videoFile = new File("src/main/recordings/test.mp4");
         try {
-            recorder.stop();
-        } catch (ATUTestRecorderException e) {
-            e.printStackTrace();
+            FileOutputStream stream = new FileOutputStream(videoFile);
+            stream.write(videoBytes);
+            stream.close();
+        }
+        catch(Exception e) {
+            System.err.println("Could not save the screen recording: \n" + e.getMessage());
         }
     }
 }
