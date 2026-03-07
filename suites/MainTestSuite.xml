@@ -2,7 +2,6 @@
 <suite name="All Chat Test Suite">
     <test name="All Chat Test on Android">
         <parameter name="platform" value="android"/>
-        <parameter name="includeAudio" value="false"/>
         <classes>
             <class name="tests.MainTest" />
         </classes>

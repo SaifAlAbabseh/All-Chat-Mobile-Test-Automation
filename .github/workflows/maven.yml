@@ -43,7 +43,7 @@ jobs:
 
     - name: Run TestNG Tests
       run: |
-        mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android' -DincludeAudio='false'
+        mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
       working-directory: /home/runner/work/All-Chat-Mobile-Test-Automation/All-Chat-Mobile-Test-Automation
       id: run-tests
 

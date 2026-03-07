@@ -20,9 +20,9 @@ public class TestBase {
 
     protected final Page page = new Page();
 
-    @Parameters({"platform", "includeAudio"})
+    @Parameters({"platform"})
     @BeforeClass(description = "Initialize the web driver, load the test data, and start recording a video")
-    public void setUp(String platform, boolean includeAudio) throws MalformedURLException {
+    public void setUp(String platform) throws MalformedURLException {
         URL serverUrl = MainHelpers.generateAppiumServerUrl();
         String avd = EnvConfig.get("AC_ANDROID_AVD");
         String appName = EnvConfig.get("AC_ANDROID_APP_NAME");
