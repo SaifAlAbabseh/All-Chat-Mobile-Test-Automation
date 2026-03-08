@@ -24,8 +24,8 @@ public class MainHelpers {
 
     public static URL generateAppiumServerUrl() {
         try {
-            String serverHost = EnvConfig.get("AC_ANDROID_SERVER_HOST");
-            String serverPort = EnvConfig.get("AC_ANDROID_SERVER_PORT");
+            String serverHost = EnvConfig.get("APPIUM_HOST");
+            String serverPort = EnvConfig.get("APPIUM_PORT");
             URI uri = new URI(String.format("http://%s:%s/", serverHost, serverPort));
             return uri.toURL();
         }
