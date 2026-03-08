@@ -4,6 +4,8 @@ pipeline {
     environment {
         SLACK_CHANNEL = '#automation-jobs'
         SLACK_CHANNEL_ID = 'C05R1CXD2Q4'
+        APPIUM_HOST = '127.0.0.1'
+        APPIUM_PORT = '4723'
     }
 
     tools {
@@ -39,12 +41,61 @@ pipeline {
             }
         }
 
+        stage("Execute ADB Server") {
+            steps {
+                echo "Executing ADB Server"
+                script {
+                    try {
+                        sh """
+                            #!/bin/bash
+                            
+                            cd ${env.ANDROID_SDK_DIRECTORY}/platform-tools
+                            ./adb start-server&
+                        """
+                    } catch (Exception e) {
+                        echo "The ADB Server is not running"
+                        echo e.toString()
+                    }
+                }
+            }
+        }
+
+        stage("Launch Android Emulator") {
+            steps {
+                echo "Starting Emulator"
+                script {
+                    try {
+                        sh """
+                            #!/bin/bash
+                            
+                            
+                           ${env.ANDROID_SDK_DIRECTORY}/cmdline-tools/latest/bin/sdkmanager "system-images;android-33;google_apis;x86_64"
+                                            ${env.ANDROID_SDK_DIRECTORY}/cmdline-tools/latest/bin/avdmanager create avd \
+                                            -n ci_emulator_arm \
+                                            -k "system-images;android-33;google_apis;x86_64" \
+                                            --force \
+                                            -d "pixel"
+                            
+                            ${env.ANDROID_SDK_DIRECTORY}/emulator/emulator -avd ci_emulator_arm -no-window -no-snapshot-load
+                            sleep 5s
+                        """
+                    } catch (Exception e) {
+                        echo "The emulator is not open"
+                        echo e.toString()
+                    }
+                }
+            }
+        }
+
         stage('Start Maven Tests') {
             steps {
                 sh '''
                 #!/bin/bash
-                set +e
                 
+                export APPIUM_HOST=$APPIUM_HOST
+                export APPIUM_PORT=$APPIUM_PORT
+
+                echo "Running tests against Appium at $APPIUM_HOST:$APPIUM_PORT"
                 mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform=${platform}
                 '''
             }
@@ -53,6 +104,7 @@ pipeline {
 
     post {
         always {
+
             archiveArtifacts artifacts: 'src/main/recordings/*.mp4', allowEmptyArchive: true
 
             junit 'target/surefire-reports/*.xml'
