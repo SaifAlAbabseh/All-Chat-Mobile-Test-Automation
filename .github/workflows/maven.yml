@@ -23,7 +23,7 @@ jobs:
         matrix:
           api-level: [ 29 ]
       steps:
-        - name: checkout
+        - name: Checkout
           uses: actions/checkout@v4
 
         - name: Set up JDK 17
@@ -36,11 +36,14 @@ jobs:
         - name: Download .env from Gist
           run: curl -o .env "${{ secrets.GIST_ENV_URL }}"
 
-        - name: Export variables
+        - name: Export .env variables
           run: |
-            set -a
-            export $(grep -v '^#' .env | xargs)
-            set +a
+            while IFS='=' read -r key value; do
+              [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+              value="${value%\"}"
+              value="${value#\"}"
+              echo "$key=$value" >> $GITHUB_ENV
+            done < .env
 
         - name: Enable KVM
           run: |
