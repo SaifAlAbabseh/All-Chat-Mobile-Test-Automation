@@ -23,10 +23,7 @@ public class TestBase {
     @Parameters({"platform"})
     @BeforeClass(description = "Initialize the web driver, load the test data, and start recording a video")
     public void setUp(String platform) throws MalformedURLException {
-        URL serverUrl = MainHelpers.generateAppiumServerUrl();
-        String avd = EnvConfig.get("AC_ANDROID_AVD");
-        String appName = EnvConfig.get("AC_ANDROID_APP_NAME");
-        new Driver(platform, serverUrl, avd, appName);
+        new Driver(platform);
         //Start screen recording
         ScreenActions.startScreenRecording();
     }

@@ -21,17 +21,4 @@ public class MainHelpers {
         WebDriverWait wait = new WebDriverWait(Driver.getDriver(), Duration.ofSeconds(seconds));
         wait.until(ExpectedConditions.elementToBeClickable(elementSelector));
     }
-
-    public static URL generateAppiumServerUrl() {
-        try {
-            String serverHost = EnvConfig.get("APPIUM_HOST");
-            String serverPort = EnvConfig.get("APPIUM_PORT");
-            URI uri = new URI(String.format("http://%s:%s/", serverHost, serverPort));
-            return uri.toURL();
-        }
-        catch(Exception e) {
-            System.err.println("Error generating appium server URL: \n" + e.getMessage());
-        }
-        return null;
-    }
 }
