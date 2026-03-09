@@ -37,15 +37,27 @@ jobs:
 
     - name: Export variables
       run: |
-         set -a
-         export $(grep -v '^#' .env | xargs)
-         set +a
+        set -a
+        export $(grep -v '^#' .env | xargs)
+        set +a
 
-    - name: Run TestNG Tests
+    - name: Enable KVM
       run: |
-        mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
-      working-directory: /home/runner/work/All-Chat-Mobile-Test-Automation/All-Chat-Mobile-Test-Automation
-      id: run-tests
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+
+    - name: run tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 29
+        script: mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
+
+#    - name: Run TestNG Tests
+#      run: |
+#        mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
+#      working-directory: /home/runner/work/All-Chat-Mobile-Test-Automation/All-Chat-Mobile-Test-Automation
+#      id: run-tests
 
     # - name: Upload Screenshots of the Failed Tests
     #   if: ${{ failure() }}
