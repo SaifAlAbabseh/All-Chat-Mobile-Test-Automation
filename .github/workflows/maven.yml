@@ -66,6 +66,7 @@ jobs:
         - name: Start Appium
           run: |
             npm install -g appium
+            appium driver install uiautomator2
             appium --port 4723 &
             sleep 5
 
@@ -80,15 +81,13 @@ jobs:
             disable-animations: false
             script: echo "Generated AVD snapshot for caching."
 
-        - name: Run Appium Tests
-          uses: reactivecircus/android-emulator-runner@v2
-          with:
-            api-level: ${{ matrix.api-level }}
-            avd-name: test
-            force-avd-creation: false
-            emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-            disable-animations: true
-            script: mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
+        - name: Run Appium tests
+          run: |
+            # Start Appium in background
+            appium --port 4723 &
+            sleep 10
+            # Run your Maven tests
+            mvn test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
 
 #    - name: Run TestNG Tests
 #      run: |
