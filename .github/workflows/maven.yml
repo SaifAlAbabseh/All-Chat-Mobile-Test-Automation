@@ -61,6 +61,15 @@ jobs:
             disable-animations: false
             script: echo "Generated AVD snapshot for caching."
 
+        - name: Download .env from Gist
+          run: curl -o .env "${{ secrets.GIST_ENV_URL }}"
+
+        - name: Export variables
+          run: |
+            set -a
+            export $(grep -v '^#' .env | xargs)
+            set +a
+
         - name: Run Appium Tests
           uses: reactivecircus/android-emulator-runner@v2
           with:

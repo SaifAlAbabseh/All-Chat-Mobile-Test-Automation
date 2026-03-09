@@ -40,7 +40,7 @@ public class Driver {
             return uri.toURL();
         }
         catch(Exception e) {
-            System.err.println("Error generating appium server URL: \n" + e.getMessage());
+            System.err.println("Error generating appium server URL: " + e.getMessage());
         }
         return null;
     }
