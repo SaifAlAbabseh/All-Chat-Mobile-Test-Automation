@@ -23,7 +23,6 @@ public class MainTest extends TestBase {
 
     @Test(priority = 2, description = "Test logout")
     public void testLogout() {
-        assertFalse(true);
         mainScreen.clickOnProfile();
         mainScreen.clickOnLogoutButton();
     }
