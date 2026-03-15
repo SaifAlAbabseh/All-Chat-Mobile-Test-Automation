@@ -61,7 +61,7 @@ jobs:
             npx appium driver install uiautomator2
 
         - name: Start Appium
-          run: npx appium --port 4723 &
+          run: npx appium --port $AC_ANDROID_SERVER_PORT &
 
         - name: Run Appium & Maven tests
           uses: reactivecircus/android-emulator-runner@v2
