@@ -16,7 +16,7 @@ public class Driver {
         if(driver != null) {
             return;
         }
-        String platform = EnvConfig.get("platform").toUpperCase();
+        String platform = System.getProperty("platform").toUpperCase();
         String avd = EnvConfig.get(String.format("AC_%s_AVD", platform));
         String appName = EnvConfig.get(String.format("AC_%s_APP_NAME", platform));
         UiAutomator2Options options = new UiAutomator2Options();
