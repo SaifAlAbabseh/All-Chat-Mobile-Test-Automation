@@ -7,10 +7,12 @@ on:
 
 jobs:
   build:
+      name: Appium Test For (${{ matrix.platform }})
       runs-on: ubuntu-latest
       strategy:
         matrix:
           api-level: [ 29 ]
+          platform: [android]
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -68,7 +70,9 @@ jobs:
             avd-name: test
             emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
             disable-animations: false
-            script: mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform='android'
+            script: |
+              mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml \
+              -Dplatform='"${{ matrix.platform }}"'
 
         - name: Upload Screenshots of the Failed Tests
           if: ${{ failure() }}
@@ -88,5 +92,5 @@ jobs:
           if: always()
           uses: actions/upload-artifact@v4
           with:
-            name: Test Report
-            path: target/surefire-reports/**
+            name: Cucumber Test Report
+            path: target/cucumber-report.html
