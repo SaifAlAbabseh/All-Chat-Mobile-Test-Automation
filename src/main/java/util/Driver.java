@@ -16,22 +16,21 @@ public class Driver {
         if(driver != null) {
             return;
         }
-        String platform = System.getProperty("platform").toUpperCase();
-        String avd = EnvConfig.get(String.format("AC_%s_AVD", platform));
-        String appName = EnvConfig.get(String.format("AC_%s_APP_NAME", platform));
+        String avd = EnvConfig.get(String.format("AC_%s_AVD", DriverManager.platform));
+        String appName = EnvConfig.get(String.format("AC_%s_APP_NAME", DriverManager.platform));
         UiAutomator2Options options = new UiAutomator2Options();
         options.setAutomationName("UiAutomator2");
         options.setAvdLaunchTimeout(Duration.ofSeconds(120));
-        URL serverUrl = generateAppiumServerUrl(platform.toUpperCase());
+        URL serverUrl = generateAppiumServerUrl(DriverManager.platform);
         assert serverUrl != null;
-        if (platform.equalsIgnoreCase("android")) {
+        if (DriverManager.platform.equalsIgnoreCase("android")) {
             options.setDeviceName("Android Emulator");
             options.setPlatformName("Android");
             options.setAvd(avd);
             options.setApp(String.format("src/main/resources/apps/%s", appName));
             driver = new AndroidDriver(serverUrl, options);
         }
-        else if(platform.equalsIgnoreCase("ios")) {
+        else if(DriverManager.platform.equalsIgnoreCase("ios")) {
             options.setDeviceName("IOS Emulator");
             options.setPlatformName("ios");
             options.setAvd(avd);

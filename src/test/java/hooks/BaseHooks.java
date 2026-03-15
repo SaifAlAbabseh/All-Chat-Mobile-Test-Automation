@@ -2,7 +2,7 @@ package hooks;
 
 import io.cucumber.java.*;
 import util.Driver;
-import util.EnvConfig;
+import util.DriverManager;
 import util.ScreenActions;
 
 public class BaseHooks {
@@ -22,8 +22,7 @@ public class BaseHooks {
     @After(order = 1)
     public static void createScreenshotOnFailure(Scenario scenario) {
         if(scenario.isFailed()) {
-            String platform = EnvConfig.get("platform").toLowerCase();
-            ScreenActions.takeScreenshot(platform, scenario.getName());
+            ScreenActions.takeScreenshot(DriverManager.platform.toLowerCase(), scenario.getName());
         }
     }
 
