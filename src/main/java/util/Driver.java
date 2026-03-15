@@ -3,7 +3,7 @@ package util;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
-
+import io.appium.java_client.ios.IOSDriver;
 import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
@@ -12,30 +12,38 @@ public class Driver {
 
     private static AppiumDriver driver;
 
-    public Driver(String platform) {
+    public static void initDriver() {
         if(driver != null) {
             return;
         }
-        String avd = EnvConfig.get("AC_ANDROID_AVD");
-        String appName = EnvConfig.get("AC_ANDROID_APP_NAME");
+        String platform = EnvConfig.get("platform").toUpperCase();
+        String avd = EnvConfig.get(String.format("AC_%s_AVD", platform));
+        String appName = EnvConfig.get(String.format("AC_%s_APP_NAME", platform));
         UiAutomator2Options options = new UiAutomator2Options();
         options.setAutomationName("UiAutomator2");
         options.setAvdLaunchTimeout(Duration.ofSeconds(120));
-        URL serverUrl = generateAppiumServerUrl();
+        URL serverUrl = generateAppiumServerUrl(platform.toUpperCase());
         assert serverUrl != null;
-        if (platform.equals("android")) {
+        if (platform.equalsIgnoreCase("android")) {
             options.setDeviceName("Android Emulator");
             options.setPlatformName("Android");
             options.setAvd(avd);
             options.setApp(String.format("src/main/resources/apps/%s", appName));
             driver = new AndroidDriver(serverUrl, options);
         }
+        else if(platform.equalsIgnoreCase("ios")) {
+            options.setDeviceName("IOS Emulator");
+            options.setPlatformName("ios");
+            options.setAvd(avd);
+            options.setApp(String.format("src/main/resources/apps/%s", appName));
+            driver = new IOSDriver(serverUrl, options);
+        }
     }
 
-    public static URL generateAppiumServerUrl() {
+    public static URL generateAppiumServerUrl(String platform) {
         try {
-            String serverHost = EnvConfig.get("AC_ANDROID_SERVER_HOST");
-            String serverPort = EnvConfig.get("AC_ANDROID_SERVER_PORT");
+            String serverHost = EnvConfig.get(String.format("AC_%s_SERVER_HOST", platform));
+            String serverPort = EnvConfig.get(String.format("AC_%s_SERVER_PORT", platform));
             URI uri = new URI(String.format("http://%s:%s/", serverHost, serverPort));
             return uri.toURL();
         }
@@ -47,5 +55,12 @@ public class Driver {
 
     public static AppiumDriver getDriver() {
         return driver;
+    }
+
+    public static void quitDriver() {
+        if(driver != null) {
+            driver.quit();
+            driver = null;
+        }
     }
 }

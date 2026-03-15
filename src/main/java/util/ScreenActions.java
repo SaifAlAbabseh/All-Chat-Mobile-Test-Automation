@@ -1,13 +1,9 @@
 package util;
 
-
-import atu.testrecorder.ATUTestRecorder;
-import atu.testrecorder.exceptions.ATUTestRecorderException;
 import io.appium.java_client.android.AndroidStartScreenRecordingOptions;
-import io.appium.java_client.screenrecording.BaseStartScreenRecordingOptions;
 import io.appium.java_client.screenrecording.CanRecordScreen;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.surefire.shared.codec.binary.Base64;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import java.io.File;
@@ -17,14 +13,12 @@ import java.time.Duration;
 
 public class ScreenActions {
 
-    public static ATUTestRecorder recorder;
-
     public static void takeScreenshot(String platform, String testCaseName) {
         File file = ((TakesScreenshot)Driver.getDriver()).getScreenshotAs(OutputType.FILE);
         try {
             FileUtils.copyFile(file, new File("src/main/screenshots/" + platform + "-" + testCaseName + ".png"));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Could not save screenshot, Error: " + e.getMessage());
         }
     }
 
@@ -45,7 +39,7 @@ public class ScreenActions {
             stream.close();
         }
         catch(Exception e) {
-            System.err.println("Could not save the screen recording: \n" + e.getMessage());
+            System.err.println("Could not save the screen recording, Error: " + e.getMessage());
         }
     }
 }
