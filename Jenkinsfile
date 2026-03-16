@@ -69,12 +69,12 @@ pipeline {
                             
                            ${env.ANDROID_SDK_DIRECTORY}/cmdline-tools/latest/bin/sdkmanager "system-images;android-33;google_apis;x86_64"
                                             ${env.ANDROID_SDK_DIRECTORY}/cmdline-tools/latest/bin/avdmanager create avd \
-                                            -n ci_emulator_arm \
+                                            -n ${env.AC_ANDROID_AVD} \
                                             -k "system-images;android-33;google_apis;x86_64" \
                                             --force \
                                             -d "pixel"
                             
-                            ${env.ANDROID_SDK_DIRECTORY}/emulator/emulator -avd ci_emulator_arm -no-window -no-snapshot-load
+                            ${env.ANDROID_SDK_DIRECTORY}/emulator/emulator -avd ${env.AC_ANDROID_AVD} -no-window -no-snapshot-load
                             sleep 5s
                         """
                     } catch (Exception e) {
