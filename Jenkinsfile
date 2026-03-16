@@ -4,8 +4,6 @@ pipeline {
     environment {
         SLACK_CHANNEL = '#automation-jobs'
         SLACK_CHANNEL_ID = 'C05R1CXD2Q4'
-        APPIUM_HOST = '127.0.0.1'
-        APPIUM_PORT = '4723'
     }
 
     tools {
@@ -87,15 +85,29 @@ pipeline {
             }
         }
 
+        stage('Install Appium & UIAutomator2') {
+            steps {
+                sh '''
+                #!/bin/bash
+                npm init -y
+                npm install appium
+                npx appium driver install uiautomator2
+                '''
+            }
+        }
+
+        stage('Start Appium Server') {
+            steps {
+                sh """
+                npx appium --port ${env.AC_ANDROID_SERVER_PORT} &
+                """
+            }
+        }
+
         stage('Start Maven Tests') {
             steps {
                 sh '''
                 #!/bin/bash
-                
-                export APPIUM_HOST=$APPIUM_HOST
-                export APPIUM_PORT=$APPIUM_PORT
-
-                echo "Running tests against Appium at $APPIUM_HOST:$APPIUM_PORT"
                 mvn clean test -DsuiteXmlFile=suites/MainTestSuite.xml -Dplatform=${platform}
                 '''
             }
@@ -105,30 +117,18 @@ pipeline {
     post {
         always {
 
-            archiveArtifacts artifacts: 'src/main/recordings/*.mp4', allowEmptyArchive: true
-
-            junit 'target/surefire-reports/*.xml'
-            archiveArtifacts artifacts: 'target/surefire-reports/**, src/main/screenshots/*.png'
+            archiveArtifacts artifacts: 'src/main/recordings/test.mp4, src/main/screenshots/*.png, target/cucumber-report.html, target/cucumber-report.json', allowEmptyArchive: true
             script {
-                def counts = sh(
-                        script: '''
-                        FILE="target/surefire-reports/testng-results.xml"
-                        TOTAL=$(grep -oP '(?<=total=")[0-9]+' "$FILE")
-                        PASSED=$(grep -oP '(?<=passed=")[0-9]+' "$FILE")
-                        FAILED=$(grep -oP '(?<=failed=")[0-9]+' "$FILE")
-                        SKIPPED=$(grep -oP '(?<=skipped=")[0-9]+' "$FILE")
-                        IGNORED=$(grep -oP '(?<=ignored=")[0-9]+' "$FILE")
-                        echo "$TOTAL,$PASSED,$FAILED,$SKIPPED,$IGNORED"
-                    ''',
-                        returnStdout: true
-                ).trim()
-
-                def parts = counts.split(',')
-                def TOTAL_TESTS   = parts[0]
-                def PASSED_TESTS  = parts[1]
-                def FAILED_TESTS  = parts[2]
-                def SKIPPED_TESTS = parts[3]
-                def IGNORED_TESTS = parts[4]
+                def cucumberJsonReport = readFile('target/cucumber-report.json')
+                def jsonRaw = new JsonSlurper().parseText(cucumberJsonReport)
+                def scenarios = jsonRaw.collectMany { feature ->
+                    feature.elements.findAll { it.type == 'scenario' }
+                }
+                def TOTAL_TESTS = scenarios.size()
+                def PASSED_TESTS = scenarios.count { s -> s.steps.every { it.result.status == 'passed' } }
+                def FAILED_TESTS = scenarios.count { s -> s.steps.any { it.result.status == 'failed' } }
+                def SKIPPED_TESTS = scenarios.count { s -> s.steps.any { it.result.status == 'skipped' } }
+                def IGNORED_TESTS = scenarios.count { s -> s.steps.any { it.result.status == 'ignored' } }
 
                 def isSuccess = (currentBuild.result == null || currentBuild.result == 'SUCCESS')
                 def failedScreenshots = isSuccess ? "" : "* 📸 Screenshots: <${env.BUILD_URL}artifact/src/main/screenshots|Click here>\n"
@@ -153,12 +153,14 @@ pipeline {
 * ⚙️ System: 📱 Mobile
 * ⚙️ Platform: ${platformTestedOn}
 ${failedScreenshots}
-* 📋 Test Report: <${env.BUILD_URL}artifact/target/surefire-reports/index.html|Click here>
-* ⬇️⬇️ Test video recording can be found below ⬇️⬇️
+* ⬇️⬇️ 📹 Test Video Recording  & 📋 Test Report can be found below ⬇️⬇️
 """
 
-                def testVideoRecordingPath = "src/main/recordings/test.mp4"
-
+                cucumberJsonReport = null
+                jsonRaw = null
+                scenarios = null
+                def testVideoRecordingPath = "recordings/test.mp4"
+                def testReportPath = "target/cucumber-report.html"
                 def resultColor = isSuccess ? "good" : "danger"
 
                 // Send Slack message
@@ -171,7 +173,7 @@ ${failedScreenshots}
                 // Send Slack test video file
                 slackUploadFile(
                         channel: "${env.SLACK_CHANNEL_ID}",
-                        filePath: testVideoRecordingPath
+                        filePath: "${testVideoRecordingPath}, ${testReportPath}"
                 )
             }
         }
