@@ -21,4 +21,8 @@ public class LoginScreen extends Screen {
         findElementBy(loginButton).click();
         return new MainScreen();
     }
+
+    public boolean returnIfLoginButtonDisplayed() {
+        return findElementBy(loginButton).isDisplayed();
+    }
 }
